@@ -20,6 +20,7 @@ import (
 const (
 	kubeletSvcOverridePath      = "/etc/systemd/system/kubelet.service.d/20-nodenet.conf"
 	nodeIpFile                  = "/run/nodeip-configuration/primary-ip"
+	forcedIpFile                = "/etc/default/nodeip-force-ip"
 	nodeIpIpV6File              = config.NodeIpIpV6File
 	nodeIpIpV4File              = config.NodeIpIpV4File
 	nodeIpNotMatchesVipsFile    = "/run/nodeip-configuration/remote-worker"
@@ -118,8 +119,13 @@ func set(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	log.Infof("Chosen Node IPs: %v", chosenAddresses)
+	// TODO: allow setting list of ips
+	forceIP, _ := config.GetIpFromFile(forcedIpFile)
+	if forceIP != nil {
+		chosenAddresses = []net.IP{forceIP}
+	}
 
+	log.Infof("Chosen Node IPs: %v", chosenAddresses)
 	nodeIP := chosenAddresses[0].String()
 	nodeIPs := nodeIP
 	if len(chosenAddresses) > 1 {
